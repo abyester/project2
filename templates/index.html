@@ -7,74 +7,81 @@
 
       <title>CS50 chat</title>
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
-      <link rel="stylesheet" href="index.css">
+      <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
       <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
 
       <script>
 
       document.addEventListener('DOMContentLoaded', () => {
 
-        // Start by checking for username
+          // Start by checking for username
           var username = localStorage.getItem('username');
-        // If no username, draw on no-username template below
-          if (username === null) {
-            no_user();
-            } else {
-            load_user(username);
+          // If no username, draw on no-username template below
+            if (username === null) {
+              console.log("No user name found " + username);
+              noUser();
+              } else {
+              console.log("Username found " + username);
+              loadUser(username);
+            }
+      
 
+          function noUser() {
+            //insert form that allows you to fill in username (template below)
+            console.log("Entering No User Function");
+            document.querySelector('.username').innerHTML =
+            document.querySelector('#no_username').innerHTML;
+            inputUser();
           }
-        });
 
-        function no_user() {
-          //insert form that allows you to fill in username (template below)
-          document.querySelector('.username').innerHTML =
-          document.querySelector('#no_username').innerHTML;
-          input_user();
-        }
+          function inputUser() {
+            // clear username and disable username submit button until new username entered
+            document.querySelector('#username_input').value = '';
+            document.querySelector('#username_submit').disabled = true;
 
-        function input_user() {
-          // clear username and disable username submit button until new username entered
-          document.querySelector('#username_input').value = '';
-          document.querySelector('#username_submit').disabled = true;
-
-          document.querySelector('#username_input').onkeyup = () => {
+            document.querySelector('#username_input').onkeyup = () => {
               if (document.querySelector('#username_input').value.length > 0)
                   document.querySelector('#username_submit').disabled = false;
               else
                   document.querySelector('#username_submit').disabled = true;
-            }
-
-          document.querySelector('#username_form').onsubmit = () => {
-
-                const username = document.querySelector('#username_input').value;
-
-                if check_username(username) = true {
-                  load_user(username)
-                } else {
-                  input_user()
-                }
-              }
-            }
-
-        function check_username(username) {
-            const request = new XMLHttpRequest();
-            request.open('POST', `user/${username}`);
-            request.onload = () => {
-              const valid_username = request.responseText;
-            }
-            request.send();
-            if valid_username = 'valid' {
-                load_user(username);
-              } else {
-                input_user();
               }
           }
 
-      function load_user(username) {
-        const yesusername = Handlebars.compile(document.querySelector('#yes_username').innerHTML);
-        document.querySelector('.username').innerHTML = yesusername;
-      }
+            document.querySelector('#username_form').onsubmit = () => {
 
+                const username = document.querySelector('#username_input').value;
+                console.log("Username " + username + " submitted");
+
+                              
+             
+                const request = new XMLHttpRequest();
+                request.open('POST', `user/${username}`);
+                request.onload = () => {
+                    const valid_username = request.responseText;
+                    console.log("Server response: " + valid_username);
+                    if (valid_username == "valid") {
+                      return loadUser(username);
+                    } else {
+                    return noUser();
+                    };
+              
+                }
+                request.send();
+                return false;
+            
+            }
+
+            function loadUser(username) {
+              console.log("Entered loadUser function");
+              
+              const templateyesusername = Handlebars.compile(document.querySelector('#yes_username').innerHTML);
+              const yesusername = templateyesusername({'username': username});
+              document.querySelector('.username').innerHTML = yesusername;
+              localStorage.setItem('username', username);
+              }
+
+          });
+      
         // If button is clicked
       </script>
 
@@ -123,7 +130,7 @@
   <body>
     <header id="header">
       <span class="logo">
-          <img src="cs50chat.jpg" alt="CS50 chat log" width="50%">
+          <img src="{{ url_for('static', filename='cs50chat.jpg') }}" alt="CS50 chat log" width="50%">
       </span>
       <span class="username">
           2 of 4
