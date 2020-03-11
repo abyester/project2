@@ -1,14 +1,14 @@
 import os
 
 from flask import Flask, jsonify, render_template
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, send, join_room, leave_room
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
 
 usernames = []
-channels = ["javascript", "babes"]
+channels = ["javascript"]
 messages = {}
 messages["javascript"] = [("18.42", "george", "Howzit in there"), ("19.45", "adam", "I don't know how to programme")]
 
@@ -32,9 +32,28 @@ def check_username(username):
 def open_channel(username, channel):
     if channel not in channels:
        channels.append(channel)
-    
+       messages[channel] = []
     return jsonify(messages[channel])
 
 @app.route("/channellist", methods=['POST'])
 def list_channels():
     return jsonify(channels)
+
+@socketio.on('join')
+def on_join(data):
+    username = data['username']
+    room = data['room']
+    join_room(room)
+    print(username + ' has entered the room' + room)
+
+@socketio.on('leave')
+def on_leave(data):
+    username = data['username']
+    room = data['room']
+    leave_room(room)
+    print(username + ' has left the room' + room)
+
+@socketio.on('json')
+def handle_json(json):
+    print(json)
+    send(json, json=True)

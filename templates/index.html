@@ -9,6 +9,7 @@
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
       <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
       <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
 
       <script>
       "use strict";
@@ -147,10 +148,51 @@
 
                   request.send();
                   document.querySelector('#channel_input').value ='';
+                  loadchannels();
+                  joinchannel(channel);
                   
                 }
                
-                
+            function joinchannel(channel) {
+              //standard line, apparently
+              var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+              socket.on('connect', () => {
+                //join the selected channel
+                socket.emit('join', {'username': username, 'room': channel});
+                //start to validate text enter box
+                inputValid("text");
+
+                //send chat messages to that channel
+                              document.querySelector('#text_submit').onclick = () => {
+                                      //get message
+                                      const message = document.querySelector('#text_input').value;
+                                      const today = new Date();
+                                      const timestamp = today.toLocaleTimeString();
+                                      const messagearray = [timestamp, username, message];
+                                      const jsondata = JSON.stringify(messagearray);
+                                      console.log("jsondata sent is " + jsondata);
+                                      socket.emit('json', jsondata);
+                                  };
+                                });
+                              
+                              
+                // when a new message is received, add to the page
+                              socket.on('json', jsondata => {
+                                console.log("jsondate received is " + jsondata);
+                                const message = JSON.parse(jsondata);
+                                const messageTime = message[0];
+                                const messageUser = message[1];
+                                const messageBody = message[2];
+                                console.log(messageTime + " " + messageUser + " " + messageBody);
+                                const newmessage = templatemessages({'time': messageTime,'user': messageUser, 'body': messageBody});
+                                console.log(newmessage);
+                                document.querySelector('#messages').innerHTML += newmessage;
+                              }
+              );
+                              
+
+            }
             
 
       });
@@ -254,12 +296,16 @@
     <div id=messages></div>
 
     <footer id="footer">
-      <span class="enter-message">
+      <div id="text_card" class="card text-white bg-info mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Enter a message:</h5>
+          <p class="card-text">
         <form id="channel_form" class="form-inline">
-          <input id="text_input" type="text" class="form-control " name="channel" placeholder="Enter your message">
+          <input id="text_input" type="text" class="form-control " name="entermessage" placeholder="Enter your message">
           <button id="text_submit" type="button" class="btn btn-primary" disabled="">Submit</button>
-        </form>
-      </span>
+        </form></p>
+      </div>
+      </div>
     </footer>
 
   </body>

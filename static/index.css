@@ -1,7 +1,7 @@
 
 body {
   padding-top: 61px;
-  padding-bottom: 61px;
+  padding-bottom: 145px;
 }
 
 #header, #footer {
@@ -10,7 +10,6 @@ body {
   justify-content: space-around;
 
   align-items: center;
-  background-color: deepskyblue;
   padding: 2px;
 
   position: fixed;
@@ -20,8 +19,17 @@ body {
 
 #header {
   top: 0;
+  background-color: deepskyblue;
 }
 
 #footer {
-  bottom: 0;
+  bottom: -10px;
 }
+
+#text_input {
+  width: 75%;
+}
+
+#text_card {
+  width: 80%;
+} 
