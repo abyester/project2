@@ -11,76 +11,149 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
 
       <script>
-
+      "use strict";
       document.addEventListener('DOMContentLoaded', () => {
 
-          // Start by checking for username
+          //Set up handlebars templates
+          const templatemessages = Handlebars.compile(document.querySelector('#channel_messages').innerHTML);
+          const templatechannels = Handlebars.compile(document.querySelector('#channel_dropdown').innerHTML);
+          const template_newchannels = Handlebars.compile(document.querySelector('#channel_enter').innerHTML);
+          
+          // Start by checking if username already stored
           var username = localStorage.getItem('username');
-          // If no username, draw on no-username template below
-            if (username === null) {
+          
+          // If no username stored, draw on no-username template below
+          // Otherwise load tempate for that user
+          if (username === null) {
               console.log("No user name found " + username);
               noUser();
               } else {
               console.log("Username found " + username);
               loadUser(username);
-            }
-      
-
+          }
+          
           function noUser() {
             //insert form that allows you to fill in username (template below)
             console.log("Entering No User Function");
-            document.querySelector('.username').innerHTML =
-            document.querySelector('#no_username').innerHTML;
-            inputUser();
+            document.querySelector('.username').innerHTML = document.querySelector('#no_username').innerHTML;
+            inputValid("username");
           }
 
-          function inputUser() {
+          function inputValid(idField) {
             // clear username and disable username submit button until new username entered
-            document.querySelector('#username_input').value = '';
-            document.querySelector('#username_submit').disabled = true;
+            document.querySelector(`#${idField}_input`).value = '';
+            document.querySelector(`#${idField}_submit`).disabled = true;
 
-            document.querySelector('#username_input').onkeyup = () => {
-              if (document.querySelector('#username_input').value.length > 0)
-                  document.querySelector('#username_submit').disabled = false;
+            document.querySelector(`#${idField}_input`).onkeyup = () => {
+              if (document.querySelector(`#${idField}_input`).value.length > 0)
+                  document.querySelector(`#${idField}_submit`).disabled = false;
               else
-                  document.querySelector('#username_submit').disabled = true;
+                  document.querySelector(`#${idField}_submit`).disabled = true;
               }
           }
 
+          if (document.querySelector('#username_form')) {
             document.querySelector('#username_form').onsubmit = () => {
+          
+            const username = document.querySelector('#username_input').value;
+                
+            console.log("Username " + username + " submitted");
 
-                const username = document.querySelector('#username_input').value;
-                console.log("Username " + username + " submitted");
-
-                              
-             
-                const request = new XMLHttpRequest();
-                request.open('POST', `user/${username}`);
-                request.onload = () => {
-                    const valid_username = request.responseText;
-                    console.log("Server response: " + valid_username);
-                    if (valid_username == "valid") {
-                      return loadUser(username);
-                    } else {
-                    return noUser();
-                    };
+            const request = new XMLHttpRequest();
+            request.open('POST', `users/${username}`);
+            request.onload = () => {
+              const valid_username = request.responseText;
+              console.log("Server response: " + valid_username);
+              if (valid_username == "valid") {
+                  return loadUser(username);
+                  } else {
+                  return noUser();
+                  };
               
-                }
-                request.send();
-                return false;
+            }
+
+            request.send();
+            return false;
+            }  
+          }
+
+          function loadUser(username) {
+            
+            console.log("Entered loadUser function");
+
+            //load "Welcome, user!" part of dom and set the username in local storage  
+            const templateyesusername = Handlebars.compile(document.querySelector('#yes_username').innerHTML);
+            const yesusername = templateyesusername({'username': username});
+            document.querySelector('.username').innerHTML = yesusername;
+            localStorage.setItem('username', username);
+              
+            //once username is loaded, load channels  
+            loadchannels()
             
             }
 
-            function loadUser(username) {
-              console.log("Entered loadUser function");
+          function loadchannels() {
+            const request = new XMLHttpRequest();
+                request.open('POST', "/channellist");
+                request.onload = () => {
+                  const channels = JSON.parse(request.responseText);
+                  if (channels.length > 0) {
+                    console.log("Channels list is" + channels)
+                    //add channels to drop down list in the dom
+                    const channelslist = templatechannels({'channels': channels});
+                    document.querySelector('.choose-channel').innerHTML = channelslist;
+                    
+                    }
+                      
+                    //irrespective load new channel form
+                    const newchannels = template_newchannels();
+                    document.querySelector('.enter-channel').innerHTML = newchannels;
+                    document.querySelector('#channel_submit').addEventListener('click', () => submitchannel("channel"));
+                    document.querySelector('#dropdown_submit').addEventListener('click', () => submitchannel("dropdown"));
+                    inputValid("channel");  
+                }
+                    
+                    
+                     
+                  
+            
+              request.send();
               
-              const templateyesusername = Handlebars.compile(document.querySelector('#yes_username').innerHTML);
-              const yesusername = templateyesusername({'username': username});
-              document.querySelector('.username').innerHTML = yesusername;
-              localStorage.setItem('username', username);
               }
+                
+                function submitchannel(entered) {
+          
+                  const channel = document.querySelector(`#${entered}_input`).value;
+  
+                  console.log("Channel " + channel + " submitted");
 
-          });
+                  const request = new XMLHttpRequest();
+                    request.open('POST', `users/${username}/${channel}`);
+                    request.onload = () => {
+                      const messages = JSON.parse(request.responseText);
+                      console.table(messages)
+                        if (messages.length > 0) {
+                          for (var i=0; i < messages.length; i++) {
+                            const messageTime = messages[i][0];
+                            const messageUser = messages[i][1];
+                            const messageBody = messages[i][2];
+                            console.log(messageTime + " " + messageUser + " " + messageBody)
+                            const newmessage = templatemessages({'time': messageTime,'user': messageUser, 'body': messageBody});
+                            console.log(newmessage);
+                            document.querySelector('#messages').innerHTML += newmessage;
+                          }
+                        }
+                    }
+
+                  request.send();
+                  document.querySelector('#channel_input').value ='';
+                  
+                }
+               
+                
+            
+
+      });
       
         // If button is clicked
       </script>
@@ -103,6 +176,31 @@
               {%- endraw %}
         </div>
       </script>
+
+    </script>
+      <!--// select channel from drop down list -->
+      <script id="channel_dropdown" type="text/x-handlebars-template">
+          <form id="channeldropdown" class="form-inline">
+            <a>Join existing chat  </a>
+            <select class="form-control" id="dropdown_input">
+               {% raw -%}
+                {{#each channels}}
+                <option>{{this}}</option>
+                {{/each}}
+              {%- endraw %}
+          </select>
+          <button id="dropdown_submit" type="button" class="btn btn-primary">Submit</button>
+        </form>
+      </script>
+
+      <!-- enter new channel -->
+      <script id="channel_enter" type="text/x-handlebars-template">
+        <form id="channel_form" class="form-inline">
+          <input id="channel_input" type="text" class="form-control" name="channel" placeholder="Create new chat">
+          <button id="channel_submit" type="button" class="btn btn-primary">Submit</button>
+        </form>
+
+
       <!--alerts  -->
       <script id="alert" type="text/x-handlebars-template">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -115,15 +213,23 @@
         </div>
       </script>
 
-      <!--//chat messages-->
-      <script id="chat_message" type="text/x-handlebars-template">
-          <div class="chat_message">
+      <!--//channel messages-->
+      <script id="channel_messages" type="text/x-handlebars-template">
+        <div class="card border-info m-2">
               {% raw -%}
-                  {{ contents }}
+              <div class="card-body text-info">
+                <h5 class="card-title">From {{ user }}:</h5>
+                <p class="card-text">{{body}}</p>
+              </div>
+              <div class="card-footer text-muted">
+                Sent at {{time}}
+              </div>
               {%- endraw %}
-              <button class="hide">Hide</button>
-          </div>
+        
+        </div>
       </script>
+
+
 
   </head>
 
@@ -145,5 +251,15 @@
 
     <div id=alert></div>
 
+    <div id=messages></div>
+
+    <footer id="footer">
+      <span class="enter-message">
+        <form id="channel_form" class="form-inline">
+          <input id="text_input" type="text" class="form-control " name="channel" placeholder="Enter your message">
+          <button id="text_submit" type="button" class="btn btn-primary" disabled="">Submit</button>
+        </form>
+      </span>
+    </footer>
 
   </body>

@@ -1,4 +1,10 @@
-#header {
+
+body {
+  padding-top: 61px;
+  padding-bottom: 61px;
+}
+
+#header, #footer {
   display: flex;
   flex-flow: row wrap;
   justify-content: space-around;
@@ -6,4 +12,16 @@
   align-items: center;
   background-color: deepskyblue;
   padding: 2px;
+
+  position: fixed;
+  width: 100%;
+  z-index: 1;
+}
+
+#header {
+  top: 0;
+}
+
+#footer {
+  bottom: 0;
 }
