@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, jsonify, render_template
+from flask import Flask, json, jsonify, render_template
 from flask_socketio import SocketIO, emit, send, join_room, leave_room
 
 app = Flask(__name__)
@@ -54,6 +54,9 @@ def on_leave(data):
     print(username + ' has left the room' + room)
 
 @socketio.on('json')
-def handle_json(json):
-    print(json)
-    send(json, json=True)
+def handle_json(data, channel):
+    decoded = json.loads(data)
+    channel = decoded[3]
+    message = (decoded[0], decoded[1], decoded[2])
+    messages[channel].append(message)
+    send(data, json=True, room = channel)
