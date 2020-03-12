@@ -5,6 +5,7 @@ body {
 }
 
 #header, #footer {
+  display: flex;
   flex-flow: row wrap;
   justify-content: space-around;
 
@@ -17,13 +18,11 @@ body {
 }
 
 #header {
-  display: flex;
   top: 0;
   background-color: deepskyblue;
 }
 
 #footer {
-  display: none;
   bottom: -10px;
 }
 
