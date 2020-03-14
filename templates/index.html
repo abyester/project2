@@ -10,206 +10,207 @@
       <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
       <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
       <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+      <script type="text/javascript" src="{{url_for('static', filename='index.js')}}"></script>
 
       <script>
-      //start by setting username and channel in global scope (so that it can be accessed from all functions)
-      var username = localStorage.getItem('username');
-      var channel = localStorage.getItem('channel');
+      // //start by setting username and channel in global scope (so that it can be accessed from all functions)
+      // var username = localStorage.getItem('username');
+      // var channel = localStorage.getItem('channel');
 
-      document.addEventListener('DOMContentLoaded', () => {
+      // document.addEventListener('DOMContentLoaded', () => {
 
-          //Set up handlebars templates
-          const templatemessages = Handlebars.compile(document.querySelector('#channel_messages').innerHTML);
-          const templatechannels = Handlebars.compile(document.querySelector('#channel_dropdown').innerHTML);
-          const template_newchannels = Handlebars.compile(document.querySelector('#channel_enter').innerHTML);
-          const template_footer = Handlebars.compile(document.querySelector('#footer_enterbox').innerHTML);
+      //     //Set up handlebars templates
+      //     const templatemessages = Handlebars.compile(document.querySelector('#channel_messages').innerHTML);
+      //     const templatechannels = Handlebars.compile(document.querySelector('#channel_dropdown').innerHTML);
+      //     const template_newchannels = Handlebars.compile(document.querySelector('#channel_enter').innerHTML);
+      //     const template_footer = Handlebars.compile(document.querySelector('#footer_enterbox').innerHTML);
           
                 
-          // If no username stored, draw on no-username template below
-          // Otherwise load tempate for that user
-          if (username === null) {
-              console.log("No user name found " + username);
-              noUser();
-              } else {
-              console.log("Username found " + username);
-              loadUser(username);
-          }
+      //     // If no username stored, draw on no-username template below
+      //     // Otherwise load tempate for that user
+      //     if (username === null) {
+      //         console.log("No user name found " + username);
+      //         noUser();
+      //         } else {
+      //         console.log("Username found " + username);
+      //         loadUser(username);
+      //     }
           
-          function noUser() {
-            //insert form that allows you to fill in username (template below)
-            console.log("Entering No User Function");
-            document.querySelector('.username').innerHTML = document.querySelector('#no_username').innerHTML;
-            inputValid("username");
-          }
+      //     function noUser() {
+      //       //insert form that allows you to fill in username (template below)
+      //       console.log("Entering No User Function");
+      //       document.querySelector('.username').innerHTML = document.querySelector('#no_username').innerHTML;
+      //       inputValid("username");
+      //     }
 
-          function inputValid(idField) {
-            // clear username and disable username submit button until new username entered
-            document.querySelector(`#${idField}_input`).value = '';
-            document.querySelector(`#${idField}_submit`).disabled = true;
+      //     function inputValid(idField) {
+      //       // clear username and disable username submit button until new username entered
+      //       document.querySelector(`#${idField}_input`).value = '';
+      //       document.querySelector(`#${idField}_submit`).disabled = true;
 
-            document.querySelector(`#${idField}_input`).onkeyup = () => {
-              if (document.querySelector(`#${idField}_input`).value.length > 0)
-                  document.querySelector(`#${idField}_submit`).disabled = false;
-              else
-                  document.querySelector(`#${idField}_submit`).disabled = true;
-              }
-          }
+      //       document.querySelector(`#${idField}_input`).onkeyup = () => {
+      //         if (document.querySelector(`#${idField}_input`).value.length > 0)
+      //             document.querySelector(`#${idField}_submit`).disabled = false;
+      //         else
+      //             document.querySelector(`#${idField}_submit`).disabled = true;
+      //         }
+      //     }
 
-          if (document.querySelector('#username_form')) {
-            document.querySelector('#username_form').onsubmit = () => {
+      //     if (document.querySelector('#username_form')) {
+      //       document.querySelector('#username_form').onsubmit = () => {
             
-            //setting username as global variable - as otherwise it'll spaz
-            username = document.querySelector('#username_input').value;
+      //       //setting username as global variable - as otherwise it'll spaz
+      //       username = document.querySelector('#username_input').value;
                 
-            console.log("Username " + username + " submitted");
+      //       console.log("Username " + username + " submitted");
 
-            const request = new XMLHttpRequest();
-            request.open('POST', `users/${username}`);
-            request.onload = () => {
-              const valid_username = request.responseText;
-              console.log("Server response: " + valid_username);
-              if (valid_username == "valid") {
+      //       const request = new XMLHttpRequest();
+      //       request.open('POST', `users/${username}`);
+      //       request.onload = () => {
+      //         const valid_username = request.responseText;
+      //         console.log("Server response: " + valid_username);
+      //         if (valid_username == "valid") {
                   
-                  return loadUser(username);
-                  } else {
-                  return noUser();
-                  };
+      //             return loadUser(username);
+      //             } else {
+      //             return noUser();
+      //             };
               
-            }
+      //       }
 
-            request.send();
-            return false;
-            }  
-          }
+      //       request.send();
+      //       return false;
+      //       }  
+      //     }
 
-          function loadUser(username) {
+      //     function loadUser(username) {
             
-            console.log("Entered loadUser function");
+      //       console.log("Entered loadUser function");
 
-            //load "Welcome, user!" part of dom and set the username in local storage  
-            const templateyesusername = Handlebars.compile(document.querySelector('#yes_username').innerHTML);
-            const yesusername = templateyesusername({'username': username});
-            document.querySelector('.username').innerHTML = yesusername;
-            localStorage.setItem('username', username);
+      //       //load "Welcome, user!" part of dom and set the username in local storage  
+      //       const templateyesusername = Handlebars.compile(document.querySelector('#yes_username').innerHTML);
+      //       const yesusername = templateyesusername({'username': username});
+      //       document.querySelector('.username').innerHTML = yesusername;
+      //       localStorage.setItem('username', username);
               
-            //once username is loaded, load channels  
-            loadchannels()
+      //       //once username is loaded, load channels  
+      //       loadchannels()
             
-            }
+      //       }
 
-          function loadchannels() {
-            const request = new XMLHttpRequest();
-                request.open('POST', "/channellist");
-                request.onload = () => {
-                  const channels = JSON.parse(request.responseText);
-                  if (channels.length > 0) {
-                    console.log("Channels list is" + channels)
-                    //add channels to drop down list in the dom
-                    const channelslist = templatechannels({'channels': channels});
-                    document.querySelector('.choose-channel').innerHTML = channelslist;
+      //     function loadchannels() {
+      //       const request = new XMLHttpRequest();
+      //           request.open('POST', "/channellist");
+      //           request.onload = () => {
+      //             const channels = JSON.parse(request.responseText);
+      //             if (channels.length > 0) {
+      //               console.log("Channels list is" + channels)
+      //               //add channels to drop down list in the dom
+      //               const channelslist = templatechannels({'channels': channels});
+      //               document.querySelector('.choose-channel').innerHTML = channelslist;
                     
-                    }
+      //               }
                       
-                    //irrespective load new channel form
-                    const newchannels = template_newchannels();
-                    document.querySelector('.enter-channel').innerHTML = newchannels;
-                    document.querySelector('#channel_submit').addEventListener('click', () => submitchannel("channel"));
-                    document.querySelector('#dropdown_submit').addEventListener('click', () => submitchannel("dropdown"));
-                    inputValid("channel");  
-                }
+      //               //irrespective load new channel form
+      //               const newchannels = template_newchannels();
+      //               document.querySelector('.enter-channel').innerHTML = newchannels;
+      //               document.querySelector('#channel_submit').addEventListener('click', () => submitchannel("channel"));
+      //               document.querySelector('#dropdown_submit').addEventListener('click', () => submitchannel("dropdown"));
+      //               inputValid("channel");  
+      //           }
                     
                     
                      
                   
             
-              request.send();
+      //         request.send();
               
-              }
+      //         }
                 
-                function submitchannel(entered) {
-                  //clear any previous channel messages
-                  document.querySelector('#messages').innerHTML = '';
+      //           function submitchannel(entered) {
+      //             //clear any previous channel messages
+      //             document.querySelector('#messages').innerHTML = '';
                   
 
-                  channel = document.querySelector(`#${entered}_input`).value;
+      //             channel = document.querySelector(`#${entered}_input`).value;
                     
-                  console.log("Channel " + channel + " submitted");
+      //             console.log("Channel " + channel + " submitted");
 
-                  const request = new XMLHttpRequest();
-                    request.open('POST', `users/${username}/${channel}`);
-                    request.onload = () => {
-                      const messages = JSON.parse(request.responseText);
-                      console.table(messages)
-                        if (messages.length > 0) {
-                          for (var i=0; i < messages.length; i++) {
-                            const messageTime = messages[i][0];
-                            const messageUser = messages[i][1];
-                            const messageBody = messages[i][2];
-                            console.log(messageTime + " " + messageUser + " " + messageBody)
-                            const newmessage = templatemessages({'time': messageTime,'user': messageUser, 'body': messageBody});
-                            console.log(newmessage);
-                            document.querySelector('#messages').innerHTML += newmessage;
-                          }
-                        }
-                    }
+      //             const request = new XMLHttpRequest();
+      //               request.open('POST', `users/${username}/${channel}`);
+      //               request.onload = () => {
+      //                 const messages = JSON.parse(request.responseText);
+      //                 console.table(messages)
+      //                   if (messages.length > 0) {
+      //                     for (var i=0; i < messages.length; i++) {
+      //                       const messageTime = messages[i][0];
+      //                       const messageUser = messages[i][1];
+      //                       const messageBody = messages[i][2];
+      //                       console.log(messageTime + " " + messageUser + " " + messageBody)
+      //                       const newmessage = templatemessages({'time': messageTime,'user': messageUser, 'body': messageBody});
+      //                       console.log(newmessage);
+      //                       document.querySelector('#messages').innerHTML += newmessage;
+      //                     }
+      //                   }
+      //               }
 
-                  request.send();
-                  document.querySelector('#channel_input').value ='';
-                  loadchannels();
-                  joinchannel(channel);
+      //             request.send();
+      //             document.querySelector('#channel_input').value ='';
+      //             loadchannels();
+      //             joinchannel(channel);
                   
-                }
+      //           }
                
-            function joinchannel(channel) {
+      //       function joinchannel(channel) {
                              
-              //standard line, apparently
-              var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+      //         //standard line, apparently
+      //         var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
-              socket.on('connect', () => {
-                //join the selected channel
-                socket.emit('join', {'username': username, 'room': channel});
+      //         socket.on('connect', () => {
+      //           //join the selected channel
+      //           socket.emit('join', {'username': username, 'room': channel});
 
-                //insert text input box in footer
-                const templatefooter = template_footer({'username': username,'channel': channel});
-                document.querySelector('#footer').innerHTML = templatefooter;
+      //           //insert text input box in footer
+      //           const templatefooter = template_footer({'username': username,'channel': channel});
+      //           document.querySelector('#footer').innerHTML = templatefooter;
 
-                //start to validate text enter box
-                inputValid("text");
+      //           //start to validate text enter box
+      //           inputValid("text");
                 
-                //get message
-                                      document.querySelector('#text_submit').onclick = () => {
-                                      //send chat messages to that channel
-                                      const message = document.querySelector('#text_input').value;
-                                      const today = new Date();
-                                      const timestamp = today.toLocaleTimeString();
-                                      const messagearray = [timestamp, username, message, channel];
-                                      const jsondata = JSON.stringify(messagearray);
-                                      console.log("jsondata sent is " + jsondata);
-                                      socket.emit('json', jsondata, channel);
-                                      document.querySelector('#text_input').value =''
-                                  };
-                                });
+      //           //get message
+      //                                 document.querySelector('#text_submit').onclick = () => {
+      //                                 //send chat messages to that channel
+      //                                 const message = document.querySelector('#text_input').value;
+      //                                 const today = new Date();
+      //                                 const timestamp = today.toLocaleTimeString();
+      //                                 const messagearray = [timestamp, username, message, channel];
+      //                                 const jsondata = JSON.stringify(messagearray);
+      //                                 console.log("jsondata sent is " + jsondata);
+      //                                 socket.emit('json', jsondata, channel);
+      //                                 document.querySelector('#text_input').value =''
+      //                             };
+      //                           });
                               
                               
-                // when a new message is received, add to the page
-                              socket.on('json', jsondata => {
-                                console.log("jsondate received is " + jsondata);
-                                const message = JSON.parse(jsondata);
-                                const messageTime = message[0];
-                                const messageUser = message[1];
-                                const messageBody = message[2];
-                                console.log(messageTime + " " + messageUser + " " + messageBody);
-                                const newmessage = templatemessages({'time': messageTime,'user': messageUser, 'body': messageBody});
-                                console.log(newmessage);
-                                document.querySelector('#messages').innerHTML += newmessage;
-                              }
-              );
+      //           // when a new message is received, add to the page
+      //                         socket.on('json', jsondata => {
+      //                           console.log("jsondate received is " + jsondata);
+      //                           const message = JSON.parse(jsondata);
+      //                           const messageTime = message[0];
+      //                           const messageUser = message[1];
+      //                           const messageBody = message[2];
+      //                           console.log(messageTime + " " + messageUser + " " + messageBody);
+      //                           const newmessage = templatemessages({'time': messageTime,'user': messageUser, 'body': messageBody});
+      //                           console.log(newmessage);
+      //                           document.querySelector('#messages').innerHTML += newmessage;
+      //                         }
+      //         );
                               
 
-            }
+      //       }
             
 
-      });
+      // });
       
         // If button is clicked
       </script>
