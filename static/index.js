@@ -15,12 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   //event handler for key entry (keyup) and submit buttons
   document.addEventListener("keyup", event => validateInput(event));
-  document.addEventListener("submit", event => {submitInput(event)});
+  document.addEventListener("submit", event => { submitInput(event) });
 
   //switch socket on and connect
   var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
   socket.on('connect', () => {
-  console.log("Socket now connected");
+    console.log("Socket now connected");
   }
   );
 
@@ -28,27 +28,27 @@ document.addEventListener('DOMContentLoaded', () => {
   // Otherwise load tempate for that user
   if (username === null) {
     console.log(`No user name found ${username}`);
-    noUser() 
-    } else {
-      loadUp();
+    noUser()
+  } else {
+    loadUp();
   };
 
   function loadUp() {
-  // Once username accepted load username elements
-  loadUser(username);
+    // Once username accepted load username elements
+    loadUser(username);
 
-  //once username is loaded, load channels  
-  loadchannels();
+    //once username is loaded, load channels  
+    loadchannels();
 
 
-  //If channel name stored, load it
-  if (channel !== null) {
-    loadchannel(channel)
+    //If channel name stored, load it
+    if (channel !== null) {
+      loadchannel(channel)
+    };
+
+    //Listen for messages and enact function when received
+    socket.on('json', jsondata => receivemessage(jsondata));
   };
-
-  //Listen for messages and enact function when received
-  socket.on('json', jsondata => receivemessage(jsondata));
-};
 
   //functions below
 
@@ -61,41 +61,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function checkUsername(username) {
     console.log("Entering checkUsername function");
-        console.log("Username " + username + " submitted");
+    console.log("Username " + username + " submitted");
 
-        const request = new XMLHttpRequest();
-        request.open('POST', `users/${username}`);
-        request.onload = () => {
-          const valid_username = request.responseText;
-          console.log("Server response: " + valid_username);
-          if (valid_username == "valid") {
-            return loadUp();
-          } else {
-            return noUser();
-          };
+    const request = new XMLHttpRequest();
+    request.open('POST', `users/${username}`);
+    request.onload = () => {
+      const valid_username = request.responseText;
+      console.log("Server response: " + valid_username);
+      if (valid_username == "valid") {
+        return loadUp();
+      } else {
+        return noUser();
+      };
 
-        }
-      
-      request.send();
-    };
+    }
+
+    request.send();
+  };
 
   function validateInput(event) {
     //identify field in which text was entered
     field = event.target;
     //identify submit button (always next element along)
     submit = field.nextElementSibling;
-    
+
     console.log("field is " + field);
     //todo - validate that there isn't someother random area
     if (field !== undefined) {
-     
+
       if (field.value.length > 0) {
         submit.disabled = false;
-       } else {
+      } else {
         submit.disabled = true;
+      }
     }
-  }
-};
+  };
 
   function submitInput(event) {
     field = event.target.id;
@@ -127,8 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
       default:
         console.log("Default case initiated!");
         break;
-     }
-     event.preventDefault();
+    }
+    event.preventDefault();
   };
 
 
@@ -161,34 +161,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const newchannels = template_newchannels();
         document.querySelector('.enter-channel').innerHTML = newchannels;
       }
-
-
     }
 
 
     request.send();
   };
 
-  // function awaitchannelchange() {
-  //   //add event listeners
-  //   document.querySelector('#channel_submit').addEventListener('click', () => submitchannel("channel"));
-  //   document.querySelector('#dropdown_submit').addEventListener('click', () => submitchannel("dropdown"));
-  // }
-
   function leavechannel(channel) {
     //clear any previous channel messages
     document.querySelector('#messages').innerHTML = '';
 
     //leave room in socket.io
-    socket.emit('leave', {'username': username, 'room': channel});
+    socket.emit('leave', { 'username': username, 'room': channel });
 
     //reset room active to false (momentarily)
-    roomactive =false;
-
+    roomactive = false;
   }
 
   function loadchannel(channel) {
-    
+
 
     console.log("Channel " + channel + " submitted");
 
@@ -196,14 +187,14 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('channel', channel);
     //reset textbox
     document.querySelector('#channel_input').value = '';
-    
-    
+
+
     //open messages stored on server
     const request = new XMLHttpRequest();
     request.open('POST', `users/${username}/${channel}`);
     request.onload = () => {
       const messages = JSON.parse(request.responseText);
-      
+
       if (messages.length > 0) {
         for (var i = 0; i < messages.length; i++) {
           const messageTime = messages[i][0];
@@ -221,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
     request.send();
 
     joinchannel(channel);
-
   };
 
   function joinchannel(channel) {
@@ -237,50 +227,42 @@ document.addEventListener('DOMContentLoaded', () => {
     //load refreshed channel list
     loadchannels();
 
-    };
+  };
 
-    function sendmessage(message) {
-      
-      //get timestamp that will be sent with message
-      const today = new Date();
-      const timestamp = today.toLocaleTimeString();
-      
-      //create the javascript array that will be sent to the server (and json it)
-      const messagearray = [timestamp, username, message, channel];
-      const jsondata = JSON.stringify(messagearray);
-      
-      console.log("jsondata sent is " + jsondata);
-      
-      //send the data
-      socket.emit('json', jsondata, channel);
-      document.querySelector('#text_input').value = ''
-    };
+  function sendmessage(message) {
 
+    //get timestamp that will be sent with message
+    const today = new Date();
+    const timestamp = today.toLocaleTimeString();
 
+    //create the javascript array that will be sent to the server (and json it)
+    const messagearray = [timestamp, username, message, channel];
+    const jsondata = JSON.stringify(messagearray);
 
-    // when a new message is received, add to the page
-    function receivemessage(jsondata) {
-      console.log("jsondate received is " + jsondata);
-      
-      const message = JSON.parse(jsondata);
-      //break message into constituent parts
-      const messageTime = message[0];
-      const messageUser = message[1];
-      const messageBody = message[2];
-      console.log(messageTime + " " + messageUser + " " + messageBody);
-      
-      //create a card with the message in it and add to the DOM
-      const newmessage = templatemessages({ 'time': messageTime, 'user': messageUser, 'body': messageBody });
-      document.querySelector('#messages').innerHTML += newmessage;
-    };
+    console.log("jsondata sent is " + jsondata);
 
-    
+    //send the data
+    socket.emit('json', jsondata, channel);
+    document.querySelector('#text_input').value = ''
+  };
 
 
 
-  
+  // when a new message is received, add to the page
+  function receivemessage(jsondata) {
+    console.log("jsondate received is " + jsondata);
 
+    const message = JSON.parse(jsondata);
+    //break message into constituent parts
+    const messageTime = message[0];
+    const messageUser = message[1];
+    const messageBody = message[2];
+    console.log(messageTime + " " + messageUser + " " + messageBody);
 
+    //create a card with the message in it and add to the DOM
+    const newmessage = templatemessages({ 'time': messageTime, 'user': messageUser, 'body': messageBody });
+    document.querySelector('#messages').innerHTML += newmessage;
+  };
 });
 
 
