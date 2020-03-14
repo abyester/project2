@@ -221,7 +221,7 @@
       <script id="no_username" type="text/x-handlebars-template">
           <form id="username_form" class="form-inline">
             <input id="username_input" type="text" class="form-control" name="username" placeholder="Enter a username">
-            <button id="username_submit" type="submit" class="btn btn-primary">Submit</button>
+            <button id="username_submit" type="submit" class="btn btn-primary" disabled="">Submit</button>
           </form>
         </script>
 
@@ -238,7 +238,7 @@
     </script>
       <!--// select channel from drop down list -->
       <script id="channel_dropdown" type="text/x-handlebars-template">
-          <form id="channeldropdown" class="form-inline">
+          <form id="channeldropdown_form" class="form-inline">
             <a>Join existing chat  </a>
             <select class="form-control" id="dropdown_input">
                {% raw -%}
@@ -247,15 +247,15 @@
                 {{/each}}
               {%- endraw %}
           </select>
-          <button id="dropdown_submit" type="button" class="btn btn-primary">Submit</button>
+          <button id="dropdown_submit" type="submit" class="btn btn-primary">Submit</button>
         </form>
       </script>
 
       <!-- enter new channel -->
       <script id="channel_enter" type="text/x-handlebars-template">
-        <form id="channel_form" class="form-inline">
+        <form id="channelenter_form" class="form-inline">
           <input id="channel_input" type="text" class="form-control" name="channel" placeholder="Create new chat">
-          <button id="channel_submit" type="button" class="btn btn-primary">Submit</button>
+          <button id="channel_submit" type="submit" class="btn btn-primary" disabled="">Submit</button>
         </form>
       </script>
 
@@ -296,9 +296,9 @@
             <h5 class="card-title">{{ username }} enter a message in "{{ channel }}":</h5>
             {%- endraw %}
             <p class="card-text">
-            <form id="channel_form" class="form-inline">
+            <form id="textinput_form" class="form-inline">
             <input id="text_input" type="text" class="form-control " name="entermessage" placeholder="Enter your message">
-            <button id="text_submit" type="button" class="btn btn-primary" disabled="">Submit</button>
+            <button id="text_submit" type="submit" class="btn btn-primary" disabled="">Submit</button>
         </form></p>
         </div>
         </div>
