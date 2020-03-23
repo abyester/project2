@@ -2,6 +2,7 @@ import os
 
 from flask import Flask, json, jsonify, render_template
 from flask_socketio import SocketIO, emit, send, join_room, leave_room
+from collections import deque
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
@@ -10,7 +11,7 @@ socketio = SocketIO(app)
 usernames = []
 channels = ["javascript"]
 messages = {}
-messages["javascript"] = [("18.42", "george", "Howzit in there"), ("19.45", "adam", "I don't know how to programme")]
+messages["javascript"] = deque([("18.42", "george", "Howzit in there"), ("19.45", "adam", "I don't know how to programme")], 100)
 
 
 @app.route("/", methods=['GET'])
@@ -32,8 +33,11 @@ def check_username(username):
 def open_channel(username, channel):
     if channel not in channels:
        channels.append(channel)
-       messages[channel] = []
-    return jsonify(messages[channel])
+       # each block of messages is a deque - a special double ended class - with a length of 100
+       # when 100 items is reached, the earliest item will automatically pop off the bottom 
+       messages[channel] = deque([], 100)
+    # need to convert the deque into a list so that it can be jsonified
+    return jsonify(list(messages[channel]))
 
 @app.route("/channellist", methods=['POST'])
 def list_channels():
