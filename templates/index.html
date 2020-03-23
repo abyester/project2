@@ -72,18 +72,17 @@
 
   <!--//channel messages-->
   <script id="channel_messages" type="text/x-handlebars-template">
-        <div class="card border-info m-2">
-              {% raw -%}
-              <div class="card-body text-info">
+    {% raw -%}    
+    <div class= "card border-{{ messageclass}} m-2">
+              <div class="card-body text-{{ messageclass }}">
                 <h5 class="card-title">From {{ user }}:</h5>
                 <p class="card-text">{{body}}</p>
               </div>
               <div class="card-footer text-muted">
                 Sent at {{time}}
-              </div>
-              {%- endraw %}
-        
+              </div>     
         </div>
+      {%- endraw %}
       </script>
 
   <!--//footer when ready to chat--->

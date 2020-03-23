@@ -1,5 +1,5 @@
 
-//start by setting username and channel in global scope (so that it can be accessed from all functions)
+//start by setting username and channel in global scope (so that these can be accessed from all functions; also set room active flag to false)
 var username = localStorage.getItem('username');
 var channel = localStorage.getItem('channel');
 var roomactive = false;
@@ -20,21 +20,19 @@ document.addEventListener('DOMContentLoaded', () => {
   //switch socket on and connect
   var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
   socket.on('connect', () => {
-    console.log("Socket now connected");
-  }
+    }
   );
 
   // If no username stored, draw on no-username template below
   // Otherwise load tempate for that user
   if (username === null) {
-    console.log(`No user name found ${username}`);
     noUser()
   } else {
     loadUp();
   };
 
   function loadUp() {
-    // Once username accepted load username elements
+    // once username exists and accepted load username elements
     loadUser(username);
 
     //once username is loaded, load channels  
@@ -46,23 +44,19 @@ document.addEventListener('DOMContentLoaded', () => {
       loadchannel(channel)
     };
 
-    //Listen for messages and enact function when received
+    //Listen for messages and enact function to receive messages when received
     socket.on('json', jsondata => receivemessage(jsondata));
   };
 
   //functions below
 
   function noUser() {
-    //insert form that allows you to fill in username (template below)
-    console.log("Entering No User Function");
-    //insert html that allows user to select username
+    //insert form that allows you to fill in username (template in html page)
     document.querySelector('.username').innerHTML = document.querySelector('#no_username').innerHTML;
   };
 
   function checkUsername(username) {
-    console.log("Entering checkUsername function");
-    console.log("Username " + username + " submitted");
-
+    //contact serve to check that username submitted not already in use (serve responds valid or not valid)
     const request = new XMLHttpRequest();
     request.open('POST', `users/${username}`);
     request.onload = () => {
@@ -82,13 +76,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function validateInput(event) {
     //identify field in which text was entered
     field = event.target;
-    //identify submit button (always next element along)
+    //identify submit button (next element along)
     submit = field.nextElementSibling;
 
-    console.log("field is " + field);
-    //todo - validate that there isn't someother random area
-    if (field !== undefined) {
-
+    //check field is actually valid (e.g. may not exist yet if being dynamically created)
+    if ((field !== undefined) && (field !== null)) {
+      //only allow submit box to be enabled if there is text in the field
       if (field.value.length > 0) {
         submit.disabled = false;
       } else {
@@ -98,54 +91,58 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function submitInput(event) {
+    // depending on which submit button was selected different actions are trigged
     field = event.target.id;
     switch (field) {
+      //username form submitted
       case 'username_form':
-        console.log("Submit logged in " + field);
         username = document.querySelector('#username_input').value;
-        checkUsername(field);
+        checkUsername(username);
         break;
+      //channel drop down form submitted
       case 'channeldropdown_form':
         console.log("Submit logged in " + field);
         //leave existing room before new channel is set
-        if (roomactive = true) leavechannel(channel);
+        if (roomactive === true) leavechannel(channel);
         channel = document.querySelector('#dropdown_input').value;
         loadchannel(channel);
         break;
+      //channel free text form submitted
       case 'channelenter_form':
         console.log("Submit logged in " + field);
         //leave existing room before new channel is set
-        if (roomactive = true) leavechannel(channel);
+        if (roomactive === true) leavechannel(channel);
         channel = document.querySelector('#channel_input').value;
         loadchannel(channel);
         break;
+      //messages text box form submitted
       case 'textinput_form':
         console.log("Submit logged in " + field);
         message = document.querySelector('#text_input').value;
         sendmessage(message);
         break;
       default:
-        console.log("Default case initiated!");
+        console.log("Something went wrong!");
         break;
     }
+    //prevent the form actually submitting (and triggering a page refresh)
     event.preventDefault();
   };
 
-
   function loadUser(username) {
-
-    console.log("Entered loadUser function");
-
     //load "Welcome, user!" part of dom and set the username in local storage  
     const templateyesusername = Handlebars.compile(document.querySelector('#yes_username').innerHTML);
     const yesusername = templateyesusername({ 'username': username });
     document.querySelector('.username').innerHTML = yesusername;
     localStorage.setItem('username', username);
 
+    //enter newchannel form submission (done here so it's only done once, not repeatedly)
+    const newchannels = template_newchannels();
+    document.querySelector('.enter-channel').innerHTML = newchannels;
   };
 
   function loadchannels() {
-    console.log("Entered loadchannels function");
+    //load current list of channels from serve and add it to the drop down channel selection box
     const request = new XMLHttpRequest();
     request.open('POST', "/channellist", false);
     request.onload = () => {
@@ -156,14 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
         //add channels to drop down list in the dom
         const channelslist = templatechannels({ 'channels': channels });
         document.querySelector('.choose-channel').innerHTML = channelslist;
-
-        //enter newchannel form submission
-        const newchannels = template_newchannels();
-        document.querySelector('.enter-channel').innerHTML = newchannels;
       }
     }
-
-
     request.send();
   };
 
@@ -176,19 +167,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //reset room active to false (momentarily)
     roomactive = false;
-  }
+  };
 
   function loadchannel(channel) {
-
-
-    console.log("Channel " + channel + " submitted");
-
     //set channel name in memory
     localStorage.setItem('channel', channel);
-    //reset textbox
+    //reset channel selection textbox
     document.querySelector('#channel_input').value = '';
-
-
     //open messages stored on server
     const request = new XMLHttpRequest();
     request.open('POST', `users/${username}/${channel}`);
@@ -201,10 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const messageUser = messages[i][1];
           const messageBody = messages[i][2];
 
-          console.log(messageTime + " " + messageUser + " " + messageBody)
-
-          const newmessage = templatemessages({ 'time': messageTime, 'user': messageUser, 'body': messageBody });
-          document.querySelector('#messages').innerHTML += newmessage;
+          addMessage(messageTime, messageUser, messageBody);
         }
       }
     }
@@ -215,22 +197,21 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function joinchannel(channel) {
-    //set template footer (where user enters messages)
+    //set template footer (this is where user enters messages)
     const templatefooter = template_footer({ 'username': username, 'channel': channel });
     document.querySelector('#footer').innerHTML = templatefooter;
 
 
-    //join the selected channel
+    //join the selected channel in socket.io
     socket.emit('join', { 'username': username, 'room': channel });
     roomactive = true;
 
-    //load refreshed channel list
+    //load refreshed channel list in the dropdown
     loadchannels();
 
   };
 
   function sendmessage(message) {
-
     //get timestamp that will be sent with message
     const today = new Date();
     const timestamp = today.toLocaleTimeString();
@@ -239,30 +220,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const messagearray = [timestamp, username, message, channel];
     const jsondata = JSON.stringify(messagearray);
 
-    console.log("jsondata sent is " + jsondata);
-
     //send the data
     socket.emit('json', jsondata, channel);
     document.querySelector('#text_input').value = ''
   };
 
-
-
   // when a new message is received, add to the page
   function receivemessage(jsondata) {
-    console.log("jsondate received is " + jsondata);
-
     const message = JSON.parse(jsondata);
     //break message into constituent parts
     const messageTime = message[0];
     const messageUser = message[1];
     const messageBody = message[2];
-    console.log(messageTime + " " + messageUser + " " + messageBody);
 
-    //create a card with the message in it and add to the DOM
-    const newmessage = templatemessages({ 'time': messageTime, 'user': messageUser, 'body': messageBody });
-    document.querySelector('#messages').innerHTML += newmessage;
+    addMessage(messageTime, messageUser, messageBody);
   };
+
+  function addMessage(messageTime, messageUser, messageBody) {
+    //take message elements and display them in the DOM
+    //if message is from the current user, format the message different (red 'danger' as opposed to normal 'info')
+    var messageClass = '';
+    if (messageUser === username) {
+      messageClass = "danger";
+    } else {
+      messageClass = "info";
+    };
+    //add message to the DOM
+    const newmessage = templatemessages({ 'time': messageTime, 'user': messageUser, 'body': messageBody, 'messageclass': messageClass });
+    document.querySelector('#messages').innerHTML += newmessage;
+    //ensure the last message is visible
+    document.querySelector('#messages').lastElementChild.scrollIntoView();
+  };
+
 });
 
 
